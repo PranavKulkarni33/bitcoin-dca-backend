@@ -19,10 +19,11 @@ app.use(express.json());
 app.post('/send-alert', async (req, res) => {
     const { signal } = req.body;
   
-    // Only accept 'BUY' or 'SELL'
+    const validSignals = ['BUY', 'EXTREME_BUY'];
     const formattedSignal = signal?.toUpperCase();
-    if (!['BUY', 'SELL'].includes(formattedSignal)) {
-      return res.status(400).json({ error: 'Signal must be BUY or SELL' });
+  
+    if (!validSignals.includes(formattedSignal)) {
+      return res.status(400).json({ error: 'Signal must be EXTREME_BUY or BUY' });
     }
   
     const now = new Date().toLocaleString('en-US', {
@@ -31,27 +32,19 @@ app.post('/send-alert', async (req, res) => {
     });
   
     const message = `
-  🚨 Bitcoin DCA Alert 🚨
+  Bitcoin DCA Alert
   
-  Signal: ${formattedSignal}
+  Signal: ${formattedSignal === 'EXTREME_BUY' ? 'Extreme Buy' : 'Buy'}
   
-  Based on the current market sentiment and the Fear & Greed Index, it may be a good time to ${
-      formattedSignal === 'BUY'
-        ? 'accumulate Bitcoin.'
-        : 'pause accumulation or consider rebalancing.'
-    }
+  Based on the current market sentiment and the Fear & Greed Index, this may be a good opportunity to accumulate Bitcoin.
   
-  ─────────────
+  Details:
+  - Market Signal: ${formattedSignal === 'EXTREME_BUY' ? 'Extreme Fear (Strong Accumulation Zone)' : 'Fear (Accumulation Zone)'}
+  - Source: Fear & Greed Index
+  - Time: ${now}
   
-  📊 Signal Details:
-  • Market Signal: ${formattedSignal}
-  • Source: Fear & Greed Index
-  • Time: ${now}
-  
-  ─────────────
-  
-  — Team Bitcoin DCA
-  `;
+  — Bitcoin DCA Notification System
+    `;
   
     const params = {
       TopicArn: process.env.SNS_TOPIC_ARN,

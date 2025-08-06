@@ -7,19 +7,25 @@ async function fetchAndSendIfNeeded() {
     const value = parseInt(res.data.data[0].value);
     console.log(`Fear & Greed Index: ${value}`);
 
+    let signalToSend = null;
+
     if (value < 25) {
-      console.log('Triggering BUY alert...');
+      signalToSend = 'EXTREME_BUY';
+    } else if (value < 40) {
+      signalToSend = 'BUY';
+    }
 
+    if (signalToSend) {
+      console.log(`Triggering ${signalToSend} alert...`);
       const apiRes = await axios.post(`${process.env.ALERT_API_URL}/send-alert`, {
-        signal: 'BUY'
+        signal: signalToSend
       });
-
-      console.log('Response:', apiRes.data);
+      console.log('Alert sent:', apiRes.data);
     } else {
-      console.log('Index above threshold — no alert sent.');
+      console.log('No alert sent — Index is above threshold.');
     }
   } catch (err) {
-    console.error('Error:', err.message);
+    console.error('Error in cron job:', err.message);
   }
 }
 
