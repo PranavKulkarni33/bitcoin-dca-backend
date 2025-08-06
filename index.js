@@ -1,8 +1,11 @@
 require('dotenv').config();
 const express = require('express');
 const AWS = require('aws-sdk');
-
+const cors = require('cors');
 const app = express();
+app.use(cors({
+    origin: 'https://431e5602-8be0-4ddb-ba56-6f8b9463a9cc-00-2jarswai5wrdp.worf.replit.dev'
+  }));
 const PORT = 3000;
 
 // Configure AWS SDK
