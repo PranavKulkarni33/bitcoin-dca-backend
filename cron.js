@@ -1,32 +1,41 @@
 require('dotenv').config();
 const axios = require('axios');
 
-async function fetchAndSendIfNeeded() {
-  try {
-    const res = await axios.get('https://api.alternative.me/fng/');
-    const value = parseInt(res.data.data[0].value);
-    console.log(`Fear & Greed Index: ${value}`);
-
-    let signalToSend = null;
-
-    if (value < 25) {
-      signalToSend = 'EXTREME_BUY';
-    } else if (value < 40) {
-      signalToSend = 'BUY';
-    }
-
-    if (signalToSend) {
-      console.log(`Triggering ${signalToSend} alert...`);
-      const apiRes = await axios.post(`${process.env.ALERT_API_URL}/send-alert`, {
-        signal: signalToSend
-      });
-      console.log('Alert sent:', apiRes.data);
-    } else {
-      console.log('No alert sent — Index is above threshold.');
-    }
-  } catch (err) {
-    console.error('Error in cron job:', err.message);
-  }
+function decideSignal(val){
+  if (val < 25) return 'EXTREME_BUY';
+  if (val < 40) return 'BUY';
+  return null;
 }
 
+async function fetchAndSendIfNeeded() {
+  try {
+    // Use FORCE_VALUE if provided (for testing), else fetch real API
+    let value;
+    if (process.env.FORCE_VALUE) {
+      value = parseInt(process.env.FORCE_VALUE, 10);
+      console.log(`Using FORCE_VALUE=${value}`);
+    } else {
+      const res = await axios.get('https://api.alternative.me/fng/');
+      value = parseInt(res.data.data[0].value, 10);
+      console.log(`Fear & Greed Index (live): ${value}`);
+    }
+
+    const signalToSend = decideSignal(value);
+    console.log(`Decision for value ${value}: ${signalToSend || 'NO ALERT'}`);
+
+    if (!signalToSend) return;
+
+    const apiRes = await axios.post(`${process.env.ALERT_API_URL}/send-alert`, {
+      signal: signalToSend
+    });
+    console.log('Alert sent:', apiRes.status, apiRes.data);
+  } catch (err) {
+    if (err.response) {
+      console.error('Cron error:', err.response.status, err.response.data);
+    } else {
+      console.error('Cron error:', err.message);
+    }
+  }
+}
 fetchAndSendIfNeeded();
+module.exports = { decideSignal }; 

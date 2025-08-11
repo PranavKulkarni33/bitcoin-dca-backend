@@ -85,6 +85,27 @@ app.post('/subscribe', async (req, res) => {
       res.status(500).json({ error: 'Subscription failed' });
     }
   });
+
+  // Return current Fear & Greed Index directly (verifies source works)
+app.get('/fg-index', async (req, res) => {
+    try {
+      const axios = require('axios');
+      const r = await axios.get('https://api.alternative.me/fng/');
+      const value = parseInt(r.data.data[0].value, 10);
+      res.json({ value });
+    } catch (e) {
+      res.status(500).json({ error: 'Failed to fetch F&G index' });
+    }
+  });
+  
+  // Test decision path without sending email
+  app.get('/test-decision', (req, res) => {
+    const { decideSignal } = require('./cron'); // uses same logic
+    const n = parseInt(req.query.value, 10);
+    if (Number.isNaN(n)) return res.status(400).json({ error: 'value required' });
+    res.json({ value: n, signal: decideSignal(n) });
+  });
+  
   
 
 app.listen(PORT, () => {
