@@ -62,12 +62,29 @@ app.post('/send-alert', async (req, res) => {
     const signalEmoji = formattedSignal === 'EXTREME_BUY' ? '🚨' : '📊';
     const signalText = formattedSignal === 'EXTREME_BUY' ? 'EXTREME ACCUMULATION ZONE' : 'ACCUMULATION ZONE';
     
+    function getFearGreedText(value) {
+      if (value < 25) return `${value}/100 - Extreme Fear 😱`;
+      if (value < 40) return `${value}/100 - Fear 😟`;
+      if (value < 60) return `${value}/100 - Neutral 😐`;
+      if (value < 75) return `${value}/100 - Greed 😊`;
+      return `${value}/100 - Extreme Greed 🤑`;
+    }
+    
+    function getRSIText(value) {
+      if (value < 30) return `${value}/100 - Deeply Oversold 🔥`;
+      if (value < 40) return `${value}/100 - Oversold 💎`;
+      if (value < 60) return `${value}/100 - Neutral ⚖️`;
+      if (value < 70) return `${value}/100 - Overbought 📈`;
+      return `${value}/100 - Extremely Overbought 🚀`;
+    }
+    
     let metrics = '';
     if (fgIndex !== undefined) {
-      metrics += `F&G: ${fgIndex}`;
+      metrics += `📊 Market Sentiment: ${getFearGreedText(fgIndex)}`;
     }
     if (rsi !== undefined && rsi !== null) {
-      metrics += fgIndex !== undefined ? ` | RSI: ${rsi}` : `RSI: ${rsi}`;
+      if (metrics) metrics += '\n';
+      metrics += `⚡ Price Momentum: ${getRSIText(rsi)}`;
     }
   
     const message = `
