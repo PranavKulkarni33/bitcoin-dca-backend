@@ -535,6 +535,8 @@ app.post('/send-alert', async (req, res) => {
     const message = `
 ${signalEmoji} ${signalText} ${signalEmoji}
 
+Signal: ${formattedSignal}
+
 ${metrics}
 
 Others are fearful. Smart money accumulates.
