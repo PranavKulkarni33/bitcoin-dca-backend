@@ -156,14 +156,22 @@ app.post('/send-alert', async (req, res) => {
     ];
     
     const educationalLinks = [
-      'Learn Bitcoin: https://learn.saylor.org/course/view.php?id=468',
       'Watch: https://www.youtube.com/@aantonop',
       'Watch: https://www.youtube.com/@CoinBureau',
       'Watch: https://www.youtube.com/@WhiteboardCrypto',
       'Watch: https://www.youtube.com/@99Bitcoinsofficial',
       'Watch: https://www.youtube.com/@AltcoinDaily',
       'Watch: https://www.youtube.com/@BenjaminCowen',
-      'Watch: https://www.youtube.com/@glassnode'
+      'Watch: https://www.youtube.com/@glassnode',
+      'Watch: https://www.youtube.com/@Bankless',
+      'Watch: https://www.youtube.com/@Finematics',
+      'Watch: https://www.youtube.com/@CryptoCasey',
+      'Watch: https://www.youtube.com/@BrianJung',
+      'Watch: https://www.youtube.com/@IvanOnTech',
+      'Watch: https://www.youtube.com/@VirtualBacon',
+      'Watch: https://www.youtube.com/@CryptoBanter',
+      'Watch: https://www.youtube.com/@TheMoonCarl',
+      'Watch: https://www.youtube.com/@BlockwareIntelligence'
     ];
     
     const randomQuote = maxiQuotes[Math.floor(Math.random() * maxiQuotes.length)];
