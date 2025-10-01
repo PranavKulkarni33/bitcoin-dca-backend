@@ -40,37 +40,71 @@ app.post('/send-alert', async (req, res) => {
       return res.status(400).json({ error: 'Signal must be EXTREME_BUY or BUY' });
     }
   
+    const maxiQuotes = [
+      '"There is no second best." - Michael Saylor',
+      '"Stack sats, stay humble." - Bitcoin Proverb',
+      '"Not your keys, not your coins." - Andreas Antonopoulos',
+      '"Fix the money, fix the world." - Bitcoin Ethos',
+      '"The best time to buy Bitcoin was yesterday. The second best time is now." - Bitcoin Wisdom',
+      '"Everyone gets Bitcoin at the price they deserve." - Bitcoin Truth',
+      '"When others are fearful, be greedy." - Warren Buffett (adopted by Bitcoiners)',
+      '"Study Bitcoin." - Saifedean Ammous',
+      '"Bitcoin is a swarm of cyber hornets serving the goddess of wisdom." - Nassim Taleb'
+    ];
+    
+    const randomQuote = maxiQuotes[Math.floor(Math.random() * maxiQuotes.length)];
+    
     const now = new Date().toLocaleString('en-US', {
       timeZone: 'America/New_York',
       hour12: true,
     });
   
-    let indicatorDetails = '';
+    const signalEmoji = formattedSignal === 'EXTREME_BUY' ? '🚨' : '📊';
+    const signalText = formattedSignal === 'EXTREME_BUY' ? 'EXTREME ACCUMULATION ZONE' : 'ACCUMULATION ZONE';
+    
+    function getFearGreedText(value) {
+      if (value < 25) return `${value}/100 - Extreme Fear 😱`;
+      if (value < 40) return `${value}/100 - Fear 😟`;
+      if (value < 60) return `${value}/100 - Neutral 😐`;
+      if (value < 75) return `${value}/100 - Greed 😊`;
+      return `${value}/100 - Extreme Greed 🤑`;
+    }
+    
+    function getRSIText(value) {
+      if (value < 30) return `${value}/100 - Deeply Oversold 🔥`;
+      if (value < 40) return `${value}/100 - Oversold 💎`;
+      if (value < 60) return `${value}/100 - Neutral ⚖️`;
+      if (value < 70) return `${value}/100 - Overbought 📈`;
+      return `${value}/100 - Extremely Overbought 🚀`;
+    }
+    
+    let metrics = '';
     if (fgIndex !== undefined) {
-      indicatorDetails += `  - Fear & Greed Index: ${fgIndex}\n`;
+      metrics += `📊 Market Sentiment: ${getFearGreedText(fgIndex)}`;
     }
     if (rsi !== undefined && rsi !== null) {
-      indicatorDetails += `  - Bitcoin RSI (1d): ${rsi}\n`;
+      if (metrics) metrics += '\n';
+      metrics += `⚡ Price Momentum: ${getRSIText(rsi)}`;
     }
   
     const message = `
-  Bitcoin DCA Alert
-  
-  Signal: ${formattedSignal === 'EXTREME_BUY' ? 'Extreme Buy' : 'Buy'}
-  
-  Based on the current market sentiment, Fear & Greed Index, and RSI indicator, this may be a good opportunity to accumulate Bitcoin.
-  
-  Details:
-  - Market Signal: ${formattedSignal === 'EXTREME_BUY' ? 'Extreme Fear (Strong Accumulation Zone)' : 'Fear (Accumulation Zone)'}
-${indicatorDetails}  - Time: ${now}
-  
-  — Bitcoin DCA Notification System
-    `;
+${signalEmoji} ${signalText} ${signalEmoji}
+
+${metrics}
+
+Others are fearful. Smart money accumulates.
+
+${randomQuote}
+
+────────────────────────
+${now}
+Moksha Capital
+    `.trim();
   
     const params = {
       TopicArn: process.env.SNS_TOPIC_ARN,
-      Subject: 'Bitcoin DCA Alert',
-      Message: message.trim(),
+      Subject: `${signalEmoji} Bitcoin Buy Signal - Moksha Capital`,
+      Message: message,
     };
   
     try {
