@@ -31,7 +31,7 @@ const sns = new AWS.SNS();
 app.use(express.json());
 
 app.post('/send-alert', async (req, res) => {
-    const { signal } = req.body;
+    const { signal, fgIndex, rsi } = req.body;
   
     const validSignals = ['BUY', 'EXTREME_BUY'];
     const formattedSignal = signal?.toUpperCase();
@@ -45,17 +45,24 @@ app.post('/send-alert', async (req, res) => {
       hour12: true,
     });
   
+    let indicatorDetails = '';
+    if (fgIndex !== undefined) {
+      indicatorDetails += `  - Fear & Greed Index: ${fgIndex}\n`;
+    }
+    if (rsi !== undefined && rsi !== null) {
+      indicatorDetails += `  - Bitcoin RSI (1d): ${rsi}\n`;
+    }
+  
     const message = `
   Bitcoin DCA Alert
   
   Signal: ${formattedSignal === 'EXTREME_BUY' ? 'Extreme Buy' : 'Buy'}
   
-  Based on the current market sentiment and the Fear & Greed Index, this may be a good opportunity to accumulate Bitcoin.
+  Based on the current market sentiment, Fear & Greed Index, and RSI indicator, this may be a good opportunity to accumulate Bitcoin.
   
   Details:
   - Market Signal: ${formattedSignal === 'EXTREME_BUY' ? 'Extreme Fear (Strong Accumulation Zone)' : 'Fear (Accumulation Zone)'}
-  - Source: Fear & Greed Index
-  - Time: ${now}
+${indicatorDetails}  - Time: ${now}
   
   — Bitcoin DCA Notification System
     `;
@@ -109,12 +116,32 @@ app.get('/fg-index', async (req, res) => {
     }
   });
   
+  // Return current Bitcoin RSI
+  app.get('/rsi', async (req, res) => {
+    try {
+      const { fetchRSI } = require('./cron');
+      const rsi = await fetchRSI();
+      if (rsi === null) {
+        return res.status(503).json({ error: 'TAAPI_SECRET not configured or RSI fetch failed' });
+      }
+      res.json({ value: rsi });
+    } catch (e) {
+      res.status(500).json({ error: 'Failed to fetch RSI' });
+    }
+  });
+  
   // Test decision path without sending email
   app.get('/test-decision', (req, res) => {
     const { decideSignal } = require('./cron'); // uses same logic
-    const n = parseInt(req.query.value, 10);
-    if (Number.isNaN(n)) return res.status(400).json({ error: 'value required' });
-    res.json({ value: n, signal: decideSignal(n) });
+    const fgValue = parseInt(req.query.fgIndex || req.query.value, 10);
+    const rsiValue = req.query.rsi ? parseInt(req.query.rsi, 10) : null;
+    
+    if (Number.isNaN(fgValue)) {
+      return res.status(400).json({ error: 'fgIndex (or value) required' });
+    }
+    
+    const signal = decideSignal(fgValue, rsiValue);
+    res.json({ fgIndex: fgValue, rsi: rsiValue, signal });
   });
   
   
