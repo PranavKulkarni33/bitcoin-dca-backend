@@ -117,18 +117,24 @@ app.get('/fg-index', async (req, res) => {
   });
   
   // Return current Bitcoin RSI
+  // Return current RSI (Relative Strength Index) from TAAPI.io
   app.get('/rsi', async (req, res) => {
     try {
-      const { fetchRSI } = require('./cron');
-      const rsi = await fetchRSI();
-      if (rsi === null) {
-        return res.status(503).json({ error: 'TAAPI_SECRET not configured or RSI fetch failed' });
-      }
-      res.json({ value: rsi });
+      const axios = require('axios');
+      const TAAPI_SECRET = process.env.TAAPI_SECRET; // make sure this is in your .env
+
+      const url = `https://api.taapi.io/rsi?secret=${TAAPI_SECRET}&exchange=binance&symbol=BTC/USDT&interval=1d`;
+      const response = await axios.get(url);
+
+      // TAAPI returns { value: 32.1234 }
+      const value = response.data.value;
+      res.json({ value });
     } catch (e) {
+      console.error('RSI fetch error:', e.message);
       res.status(500).json({ error: 'Failed to fetch RSI' });
     }
   });
+
   
   // Test decision path without sending email
   app.get('/test-decision', (req, res) => {
